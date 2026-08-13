@@ -13,100 +13,250 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'My First Flutter Application',
       home: Scaffold(
-        // DARK PINK BACKGROUND
-        backgroundColor: const Color(0xFFAD1457),
+        backgroundColor: const Color(0xFFFFE6F0),
 
         // APP BAR
         appBar: AppBar(
           title: const Text(
             'My First Flutter Application',
-            style: TextStyle(
-              color: Colors.black,
-              fontSize: 20,
-              fontFamily: 'Georgia',
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyle(color: Colors.black, fontSize: 16),
           ),
-          backgroundColor: const Color(0xFFE91E63),
+          backgroundColor: Colors.white,
         ),
 
-        // CENTERED CONTENT
-        body: Center(
-          child: Container(
-            margin: const EdgeInsets.all(20),
-            padding: const EdgeInsets.all(20),
-
-            // ROUNDED CARD AND BORDER
-            decoration: BoxDecoration(
-              color: const Color(0xFFFCE4EC),
-              border: Border.all(color: Colors.black, width: 2),
-              borderRadius: BorderRadius.circular(25),
-            ),
-
+        // BODY
+        body: SingleChildScrollView(
+          child: Center(
             child: Column(
-              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                // YOUR PHOTO
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(20),
-                  child: Image.asset(
-                    'assets/DelaCerna.jpg',
-                    width: 200,
-                    height: 220,
-                    fit: BoxFit.cover,
+                // =========================
+                // PROFILE CARD
+                // =========================
+                Card(
+                  margin: const EdgeInsets.fromLTRB(20, 15, 20, 10),
+                  elevation: 4,
+                  child: Padding(
+                    padding: const EdgeInsets.all(15),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        // PROFILE IMAGE
+                        Image.asset(
+                          'assets/DelaCerna.jpg',
+                          width: 110,
+                          height: 110,
+                        ),
+
+                        const SizedBox(height: 8),
+
+                        // NEW WIDGET - DIVIDER
+                        const Divider(thickness: 2, indent: 30, endIndent: 30),
+
+                        const SizedBox(height: 8),
+
+                        // NAME
+                        const Text(
+                          'Leachim Dela Cerna',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black,
+                          ),
+                        ),
+
+                        const SizedBox(height: 3),
+
+                        // COURSE
+                        const Text(
+                          'BSIT-3',
+                          style: TextStyle(fontSize: 15, color: Colors.black),
+                        ),
+
+                        const SizedBox(height: 5),
+
+                        // APPLICATION TITLE
+                        const Text(
+                          'My First Flutter Application',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontStyle: FontStyle.italic,
+                            color: Colors.black,
+                          ),
+                        ),
+
+                        const SizedBox(height: 5),
+
+                        // DATE
+                        const Text(
+                          'July 30, 2026',
+                          style: TextStyle(fontSize: 12, color: Colors.black),
+                        ),
+
+                        const SizedBox(height: 5),
+
+                        // HOBBY
+                        const Text(
+                          'Hobby: Dancing',
+                          style: TextStyle(fontSize: 14, color: Colors.black),
+                        ),
+
+                        const SizedBox(height: 10),
+
+                        // AGE AND BIRTHDATE ROW
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            const Text(
+                              'Age: 21',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.black,
+                              ),
+                            ),
+
+                            const Text(
+                              'Birthdate: September 6, 2005',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.black,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
 
-                const SizedBox(height: 20),
+                // =========================
+                // FAVORITES CARD
+                // =========================
+                Card(
+                  margin: const EdgeInsets.fromLTRB(20, 5, 20, 20),
+                  elevation: 4,
+                  child: Padding(
+                    padding: const EdgeInsets.all(15),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        // FAVORITES TITLE
+                        const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Icon(Icons.favorite, color: Colors.pink, size: 18),
 
-                // FULL NAME
-                const Text(
-                  'Leachim Dela Cerna',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 26,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black,
-                    fontFamily: 'Georgia',
-                  ),
-                ),
+                            SizedBox(width: 5),
 
-                const SizedBox(height: 8),
+                            Text(
+                              'My Favorites',
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black,
+                              ),
+                            ),
 
-                // COURSE AND SECTION
-                const Text(
-                  'BSIT-3',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black,
-                    fontFamily: 'Georgia',
-                  ),
-                ),
+                            SizedBox(width: 5),
 
-                const SizedBox(height: 8),
+                            Icon(Icons.favorite, color: Colors.pink, size: 18),
+                          ],
+                        ),
 
-                // DATE
-                const Text(
-                  '07-30-2026',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 20,
-                    color: Colors.black,
-                    fontFamily: 'Georgia',
+                        const SizedBox(height: 12),
+
+                        // FAVORITE GAME
+                        const Text(
+                          'Favorite Game',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black,
+                          ),
+                        ),
+
+                        const SizedBox(height: 3),
+
+                        const Text(
+                          'Mobile Legends',
+                          style: TextStyle(fontSize: 13, color: Colors.black),
+                        ),
+
+                        const SizedBox(height: 10),
+
+                        // FAVORITE FOOD
+                        const Text(
+                          'Favorite Food',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black,
+                          ),
+                        ),
+
+                        const SizedBox(height: 3),
+
+                        const Text(
+                          'Fried Chicken',
+                          style: TextStyle(fontSize: 13, color: Colors.black),
+                        ),
+
+                        const SizedBox(height: 10),
+
+                        // FAVORITE MOVIE
+                        const Text(
+                          'Favorite Movie',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black,
+                          ),
+                        ),
+
+                        const SizedBox(height: 3),
+
+                        const Text(
+                          'Avengers: Endgame',
+                          style: TextStyle(fontSize: 13, color: Colors.black),
+                        ),
+
+                        const SizedBox(height: 12),
+
+                        // ROW
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            const Text(
+                              'Game: Mobile Legends',
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: Colors.black,
+                              ),
+                            ),
+
+                            const Text(
+                              'Food: Fried Chicken',
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: Colors.black,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ],
             ),
           ),
-        ),
-
-        // FLOATING BUTTON
-        floatingActionButton: FloatingActionButton(
-          onPressed: null,
-          backgroundColor: const Color(0xFFE91E63),
-          child: const Icon(Icons.add, color: Colors.white),
         ),
       ),
     );
