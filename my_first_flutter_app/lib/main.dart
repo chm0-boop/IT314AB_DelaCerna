@@ -12,7 +12,6 @@ class Profile {
   int? age;
   String? hobby;
 
-  // NEW FIELDS
   String? studentId;
   String? email;
   String? favoriteSubject;
@@ -130,7 +129,6 @@ List<Profile> profiles = [
 // FLAG 7 — SORT THE ROLL CALL
 // ==========================================
 
-// Sort students alphabetically by name
 void sortProfilesByName() {
   profiles.sort((a, b) {
     String nameA = a.name ?? '';
@@ -145,11 +143,6 @@ void sortProfilesByName() {
 // ==========================================
 
 void main() {
-  // ==========================================
-  // FLAG 7
-  // SORT THE LIST BEFORE DISPLAYING IT
-  // ==========================================
-
   sortProfilesByName();
 
   runApp(const MyApp());
@@ -169,150 +162,376 @@ class MyApp extends StatelessWidget {
 
       title: 'My First Flutter Application',
 
-      home: Scaffold(
-        backgroundColor: const Color(0xFFFFE6F0),
+      // IMPORTANT:
+      // StudentHome is inside MaterialApp.
+      // This allows AlertDialog and other
+      // Material widgets to work correctly.
+      home: const StudentHome(),
+    );
+  }
+}
 
-        // ==========================================
-        // APP BAR
-        // ==========================================
-        appBar: AppBar(
+// ==========================================
+// STUDENT HOME
+// ==========================================
+
+class StudentHome extends StatefulWidget {
+  const StudentHome({super.key});
+
+  @override
+  State<StudentHome> createState() => _StudentHomeState();
+}
+
+// ==========================================
+// STUDENT HOME STATE
+// ==========================================
+
+class _StudentHomeState extends State<StudentHome> {
+  // ==========================================
+  // FLAG 4 — FAVORITE STATE
+  // ==========================================
+
+  // Each student's ID is stored independently.
+  Set<String> favoriteStudents = {};
+
+  // ==========================================
+  // FLAG 6 — EDIT DIALOG
+  // ==========================================
+
+  void showEditDialog(Profile profile) {
+    showDialog(
+      context: context,
+
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
           title: const Text(
-            'My First Flutter Application',
-            style: TextStyle(color: Colors.black, fontSize: 16),
+            'Edit Student',
+            style: TextStyle(fontWeight: FontWeight.bold),
           ),
 
-          backgroundColor: Colors.white,
+          content: Text(
+            'You selected ${showData(profile.name)} for editing.',
+            style: const TextStyle(fontSize: 16),
+          ),
+
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+              },
+
+              child: const Text('Close'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // ==========================================
+  // FLAG 4 — TOGGLE FAVORITE
+  // ==========================================
+
+  void toggleFavorite(Profile profile) {
+    if (profile.studentId == null) {
+      return;
+    }
+
+    setState(() {
+      if (favoriteStudents.contains(profile.studentId)) {
+        favoriteStudents.remove(profile.studentId);
+      } else {
+        favoriteStudents.add(profile.studentId!);
+      }
+    });
+  }
+
+  // ==========================================
+  // FLAG 5 — DELETE STUDENT
+  // ==========================================
+
+  void deleteStudent(int index) {
+    Profile deletedProfile = profiles[index];
+
+    String deletedName = showData(deletedProfile.name);
+
+    // Store ID before deleting
+    String? deletedStudentId = deletedProfile.studentId;
+
+    setState(() {
+      // Remove student from the list
+      profiles.removeAt(index);
+
+      // Remove student from favorites
+      if (deletedStudentId != null) {
+        favoriteStudents.remove(deletedStudentId);
+      }
+    });
+
+    // Show confirmation message
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text('$deletedName has been deleted.')));
+  }
+
+  // ==========================================
+  // BUILD
+  // ==========================================
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFFFE6F0),
+
+      // ==========================================
+      // APP BAR
+      // ==========================================
+      appBar: AppBar(
+        title: const Text(
+          'My First Flutter Application',
+          style: TextStyle(color: Colors.black, fontSize: 16),
         ),
 
-        // ==========================================
-        // STUDENT LIST
-        // ==========================================
-        body: ListView.builder(
-          padding: const EdgeInsets.all(10),
-
-          itemCount: profiles.length,
-
-          itemBuilder: (context, index) {
-            Profile profile = profiles[index];
-
-            return Card(
-              margin: const EdgeInsets.fromLTRB(10, 10, 10, 5),
-
-              elevation: 4,
-
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-
-                  crossAxisAlignment: CrossAxisAlignment.center,
-
-                  children: [
-                    // ==========================================
-                    // PROFILE IMAGE
-                    // ==========================================
-                    Image.asset(profile.image, width: 120, height: 120),
-
-                    const SizedBox(height: 15),
-
-                    // ==========================================
-                    // NAME
-                    // ==========================================
-                    Text(
-                      showData(profile.name),
-
-                      textAlign: TextAlign.center,
-
-                      style: const TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-
-                    const SizedBox(height: 8),
-
-                    // ==========================================
-                    // STUDENT ID
-                    // ==========================================
-                    Text(
-                      'Student ID: ${showData(profile.studentId)}',
-
-                      style: const TextStyle(fontSize: 16),
-                    ),
-
-                    const SizedBox(height: 8),
-
-                    // ==========================================
-                    // EMAIL
-                    // ==========================================
-                    Text(
-                      'Email: ${showData(profile.email)}',
-
-                      style: const TextStyle(fontSize: 16),
-                    ),
-
-                    const SizedBox(height: 8),
-
-                    // ==========================================
-                    // COURSE
-                    // ==========================================
-                    Text(
-                      'Course: ${showData(profile.course)}',
-
-                      style: const TextStyle(fontSize: 16),
-                    ),
-
-                    const SizedBox(height: 8),
-
-                    // ==========================================
-                    // YEAR LEVEL
-                    // ==========================================
-                    Text(
-                      'Year Level: ${profile.yearLevel?.toString() ?? 'Not provided'}',
-
-                      style: const TextStyle(fontSize: 16),
-                    ),
-
-                    const SizedBox(height: 8),
-
-                    // ==========================================
-                    // AGE
-                    // ==========================================
-                    Text(
-                      'Age: ${profile.age?.toString() ?? 'Not provided'}',
-
-                      style: const TextStyle(fontSize: 16),
-                    ),
-
-                    const SizedBox(height: 8),
-
-                    // ==========================================
-                    // HOBBY
-                    // ==========================================
-                    Text(
-                      'Hobby: ${showData(profile.hobby)}',
-
-                      style: const TextStyle(fontSize: 16),
-                    ),
-
-                    const SizedBox(height: 8),
-
-                    // ==========================================
-                    // FAVORITE SUBJECT
-                    // ==========================================
-                    Text(
-                      'Favorite Subject: ${showData(profile.favoriteSubject)}',
-
-                      style: const TextStyle(fontSize: 16),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          },
-        ),
+        backgroundColor: Colors.white,
       ),
+
+      // ==========================================
+      // STUDENT LIST
+      // ==========================================
+      body: profiles.isEmpty
+          ? const Center(
+              child: Text(
+                'No students found.',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+            )
+          : ListView.builder(
+              padding: const EdgeInsets.all(10),
+
+              itemCount: profiles.length,
+
+              itemBuilder: (context, index) {
+                // Get current student
+                Profile profile = profiles[index];
+
+                // ==========================================
+                // CHECK FAVORITE STATUS
+                // ==========================================
+
+                bool isFavorite =
+                    profile.studentId != null &&
+                    favoriteStudents.contains(profile.studentId);
+
+                // ==========================================
+                // STUDENT CARD
+                // ==========================================
+
+                return Card(
+                  margin: const EdgeInsets.fromLTRB(10, 10, 10, 5),
+
+                  elevation: 4,
+
+                  // Favorite students have a pink card
+                  color: isFavorite ? Colors.pink.shade100 : Colors.white,
+
+                  child: Padding(
+                    padding: const EdgeInsets.all(20),
+
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+
+                      crossAxisAlignment: CrossAxisAlignment.center,
+
+                      children: [
+                        // ==========================================
+                        // STUDENT IMAGE
+                        // ==========================================
+                        Image.asset(profile.image, width: 120, height: 120),
+
+                        const SizedBox(height: 15),
+
+                        // ==========================================
+                        // STUDENT NAME
+                        // ==========================================
+                        Text(
+                          showData(profile.name),
+
+                          textAlign: TextAlign.center,
+
+                          style: const TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+
+                        // ==========================================
+                        // FAVORITE LABEL
+                        // ==========================================
+                        if (isFavorite) ...[
+                          const SizedBox(height: 5),
+
+                          const Text(
+                            '★ FAVORITE STUDENT',
+
+                            style: TextStyle(
+                              color: Colors.pink,
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+
+                        const SizedBox(height: 8),
+
+                        // ==========================================
+                        // STUDENT ID
+                        // ==========================================
+                        Text(
+                          'Student ID: '
+                          '${showData(profile.studentId)}',
+
+                          style: const TextStyle(fontSize: 16),
+                        ),
+
+                        const SizedBox(height: 8),
+
+                        // ==========================================
+                        // EMAIL
+                        // ==========================================
+                        Text(
+                          'Email: '
+                          '${showData(profile.email)}',
+
+                          style: const TextStyle(fontSize: 16),
+                        ),
+
+                        const SizedBox(height: 8),
+
+                        // ==========================================
+                        // COURSE
+                        // ==========================================
+                        Text(
+                          'Course: '
+                          '${showData(profile.course)}',
+
+                          style: const TextStyle(fontSize: 16),
+                        ),
+
+                        const SizedBox(height: 8),
+
+                        // ==========================================
+                        // YEAR LEVEL
+                        // ==========================================
+                        Text(
+                          'Year Level: '
+                          '${profile.yearLevel?.toString() ?? 'Not provided'}',
+
+                          style: const TextStyle(fontSize: 16),
+                        ),
+
+                        const SizedBox(height: 8),
+
+                        // ==========================================
+                        // AGE
+                        // ==========================================
+                        Text(
+                          'Age: '
+                          '${profile.age?.toString() ?? 'Not provided'}',
+
+                          style: const TextStyle(fontSize: 16),
+                        ),
+
+                        const SizedBox(height: 8),
+
+                        // ==========================================
+                        // HOBBY
+                        // ==========================================
+                        Text(
+                          'Hobby: '
+                          '${showData(profile.hobby)}',
+
+                          style: const TextStyle(fontSize: 16),
+                        ),
+
+                        const SizedBox(height: 8),
+
+                        // ==========================================
+                        // FAVORITE SUBJECT
+                        // ==========================================
+                        Text(
+                          'Favorite Subject: '
+                          '${showData(profile.favoriteSubject)}',
+
+                          style: const TextStyle(fontSize: 16),
+                        ),
+
+                        const SizedBox(height: 15),
+
+                        // ==========================================
+                        // ACTION BUTTONS
+                        // ==========================================
+                        Wrap(
+                          alignment: WrapAlignment.center,
+
+                          spacing: 10,
+
+                          runSpacing: 10,
+
+                          children: [
+                            // ==========================================
+                            // FLAG 4 — FAVORITE
+                            // ==========================================
+                            ElevatedButton.icon(
+                              onPressed: () {
+                                toggleFavorite(profile);
+                              },
+
+                              icon: Icon(
+                                isFavorite
+                                    ? Icons.favorite
+                                    : Icons.favorite_border,
+
+                                color: isFavorite ? Colors.pink : Colors.black,
+                              ),
+
+                              label: Text(
+                                isFavorite ? 'Favorited' : 'Favorite',
+                              ),
+                            ),
+
+                            // ==========================================
+                            // FLAG 6 — EDIT
+                            // ==========================================
+                            ElevatedButton.icon(
+                              onPressed: () {
+                                showEditDialog(profile);
+                              },
+
+                              icon: const Icon(Icons.edit),
+
+                              label: const Text('Edit'),
+                            ),
+
+                            // ==========================================
+                            // FLAG 5 — DELETE
+                            // ==========================================
+                            ElevatedButton.icon(
+                              onPressed: () {
+                                deleteStudent(index);
+                              },
+
+                              icon: const Icon(Icons.delete),
+
+                              label: const Text('Delete'),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
     );
   }
 }
