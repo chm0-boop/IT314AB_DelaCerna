@@ -30,6 +30,7 @@ String showData(String? value) {
   if (value == null || value.isEmpty) {
     return 'Not provided';
   }
+
   return value;
 }
 
@@ -114,6 +115,7 @@ void sortProfilesByName() {
 
 void main() {
   sortProfilesByName();
+
   runApp(const MyApp());
 }
 
@@ -122,25 +124,47 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: StudentHome(),
+
+      initialRoute: '/student-list',
+
+      routes: {
+        '/student-list': (context) => const StudentListScreen(),
+
+        '/add-student': (context) => const AddStudentScreen(),
+      },
+
+      onGenerateRoute: (settings) {
+        if (settings.name == '/student-details') {
+          final Profile profile = settings.arguments as Profile;
+
+          return MaterialPageRoute(
+            builder: (context) => StudentDetailsScreen(profile: profile),
+          );
+        }
+
+        return null;
+      },
     );
   }
 }
 
-class StudentHome extends StatefulWidget {
-  const StudentHome({super.key});
+// ang screen for student list
+
+class StudentListScreen extends StatefulWidget {
+  const StudentListScreen({super.key});
 
   @override
-  State<StudentHome> createState() => _StudentHomeState();
+  State<StudentListScreen> createState() => _StudentListScreenState();
 }
 
-class _StudentHomeState extends State<StudentHome> {
-  Set<String> favoriteStudents = {};
+class _StudentListScreenState extends State<StudentListScreen> {
+  final Set<String> favoriteStudents = {};
+
   bool isLoading = true;
 
-  List<Profile> originalProfiles = [
+  final List<Profile> originalProfiles = [
     Profile(
       image: 'assets/DelaCerna.jpg',
       name: 'Leachim Dela Cerna',
@@ -218,17 +242,16 @@ class _StudentHomeState extends State<StudentHome> {
   @override
   void initState() {
     super.initState();
+
     loadStudents();
   }
 
   Future<void> loadStudents() async {
-    setState(() {
-      isLoading = true;
-    });
-
     await Future.delayed(const Duration(seconds: 2));
 
-    if (!mounted) return;
+    if (!mounted) {
+      return;
+    }
 
     setState(() {
       isLoading = false;
@@ -256,9 +279,9 @@ class _StudentHomeState extends State<StudentHome> {
   }
 
   void toggleFavorite(Profile profile) {
-    setState(() {
-      String id = profile.studentId ?? profile.name ?? '';
+    final String id = profile.studentId ?? profile.name ?? '';
 
+    setState(() {
       if (favoriteStudents.contains(id)) {
         favoriteStudents.remove(id);
       } else {
@@ -268,7 +291,7 @@ class _StudentHomeState extends State<StudentHome> {
   }
 
   void deleteStudent(int index) {
-    String id = profiles[index].studentId ?? profiles[index].name ?? '';
+    final String id = profiles[index].studentId ?? profiles[index].name ?? '';
 
     setState(() {
       profiles.removeAt(index);
@@ -287,7 +310,9 @@ class _StudentHomeState extends State<StudentHome> {
 
     await Future.delayed(const Duration(seconds: 2));
 
-    if (!mounted) return;
+    if (!mounted) {
+      return;
+    }
 
     setState(() {
       profiles = originalProfiles
@@ -308,9 +333,19 @@ class _StudentHomeState extends State<StudentHome> {
           .toList();
 
       favoriteStudents.clear();
+
       sortProfilesByName();
+
       isLoading = false;
     });
+  }
+
+  void openStudentDetails(Profile profile) {
+    Navigator.pushNamed(context, '/student-details', arguments: profile);
+  }
+
+  void openAddStudent() {
+    Navigator.pushNamed(context, '/add-student');
   }
 
   Widget loadingState() {
@@ -319,7 +354,9 @@ class _StudentHomeState extends State<StudentHome> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           CircularProgressIndicator(),
+
           SizedBox(height: 20),
+
           Text(
             'Loading students...',
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
@@ -334,18 +371,24 @@ class _StudentHomeState extends State<StudentHome> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.people_outline, size: 80, color: Colors.grey),
+          const Icon(Icons.people_outline, size: 80, color: Colors.grey),
+
           const SizedBox(height: 15),
+
           const Text(
             'No students found',
             style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
           ),
+
           const SizedBox(height: 5),
+
           const Text(
             'The student directory is empty.',
             style: TextStyle(fontSize: 16, color: Colors.grey),
           ),
+
           const SizedBox(height: 20),
+
           ElevatedButton(
             onPressed: restoreStudents,
             child: const Text('Restore Students'),
@@ -358,142 +401,221 @@ class _StudentHomeState extends State<StudentHome> {
   Widget studentList() {
     return ListView.builder(
       padding: const EdgeInsets.all(12),
+
       itemCount: profiles.length,
+
       itemBuilder: (context, index) {
-        final profile = profiles[index];
+        final Profile profile = profiles[index];
 
-        String studentKey = profile.studentId ?? profile.name ?? '';
+        final String studentKey = profile.studentId ?? profile.name ?? '';
 
-        bool isFavorite = favoriteStudents.contains(studentKey);
+        final bool isFavorite = favoriteStudents.contains(studentKey);
 
         return Card(
           margin: const EdgeInsets.only(bottom: 15),
+
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(15),
             side: const BorderSide(color: Color(0xFFAD1457)),
           ),
-          child: Padding(
-            padding: const EdgeInsets.all(15),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(50),
-                      child: Image.asset(
-                        profile.image,
-                        width: 80,
-                        height: 80,
-                        fit: BoxFit.cover,
+
+          child: InkWell(
+            borderRadius: BorderRadius.circular(15),
+
+            onTap: () {
+              openStudentDetails(profile);
+            },
+
+            child: Padding(
+              padding: const EdgeInsets.all(15),
+
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(50),
+
+                        child: Image.asset(
+                          profile.image,
+                          width: 80,
+                          height: 80,
+                          fit: BoxFit.cover,
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 15),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            showData(profile.name),
-                            style: const TextStyle(
-                              fontSize: 22,
-                              fontWeight: FontWeight.bold,
-                              fontFamily: 'Georgia',
+
+                      const SizedBox(width: 15),
+
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+
+                          children: [
+                            Text(
+                              showData(profile.name),
+
+                              style: const TextStyle(
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
+                                fontFamily: 'Georgia',
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 5,
-                            ),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(20),
-                              color: profile.active
-                                  ? Colors.green.shade100
-                                  : Colors.red.shade100,
-                            ),
-                            child: Text(
-                              profile.active ? 'ACTIVE' : 'INACTIVE',
-                              style: TextStyle(
+
+                            const SizedBox(height: 8),
+
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 5,
+                              ),
+
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(20),
+
                                 color: profile.active
-                                    ? Colors.green.shade700
-                                    : Colors.red.shade700,
-                                fontWeight: FontWeight.bold,
+                                    ? Colors.green.shade100
+                                    : Colors.red.shade100,
+                              ),
+
+                              child: Text(
+                                profile.active ? 'ACTIVE' : 'INACTIVE',
+
+                                style: TextStyle(
+                                  color: profile.active
+                                      ? Colors.green.shade700
+                                      : Colors.red.shade700,
+
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ),
-                          ),
-                          if (isFavorite) ...[
-                            const SizedBox(height: 5),
-                            const Text(
-                              '★ FAVORITE STUDENT',
-                              style: TextStyle(
-                                color: Colors.pink,
-                                fontSize: 15,
-                                fontWeight: FontWeight.bold,
+
+                            if (isFavorite) ...[
+                              const SizedBox(height: 5),
+
+                              const Text(
+                                '★ FAVORITE STUDENT',
+                                style: TextStyle(
+                                  color: Colors.pink,
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
-                            ),
+                            ],
                           ],
-                        ],
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  if (!profile.active) ...[
+                    const SizedBox(height: 8),
+
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+
+                      decoration: BoxDecoration(
+                        color: Colors.orange.shade100,
+
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+
+                      child: const Text(
+                        'This student is inactive',
+
+                        style: TextStyle(
+                          color: Colors.deepOrange,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ],
-                ),
-                if (!profile.active) ...[
-                  const SizedBox(height: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.orange.shade100,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Text(
-                      '⚠ This student is inactive',
-                      style: TextStyle(
-                        color: Colors.deepOrange,
-                        fontWeight: FontWeight.bold,
+
+                  const SizedBox(height: 15),
+
+                  Text(
+                    'Student ID: '
+                    '${showData(profile.studentId)}',
+                  ),
+
+                  Text(
+                    'Course: '
+                    '${showData(profile.course)}',
+                  ),
+
+                  Text(
+                    'Year Level: '
+                    '${profile.yearLevel ?? 'Not provided'}',
+                  ),
+
+                  Text(
+                    'Age: '
+                    '${profile.age ?? 'Not provided'}',
+                  ),
+
+                  Text(
+                    'Hobby: '
+                    '${showData(profile.hobby)}',
+                  ),
+
+                  Text(
+                    'Email: '
+                    '${showData(profile.email)}',
+                  ),
+
+                  Text(
+                    'Favorite Subject: '
+                    '${showData(profile.favoriteSubject)}',
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () {
+                            toggleFavorite(profile);
+                          },
+
+                          child: Text(isFavorite ? 'Unfavorite' : 'Favorite'),
+                        ),
                       ),
-                    ),
+
+                      const SizedBox(width: 8),
+
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () {
+                            showEditDialog(profile);
+                          },
+
+                          child: const Text('Edit'),
+                        ),
+                      ),
+
+                      const SizedBox(width: 8),
+
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () {
+                            deleteStudent(index);
+                          },
+
+                          child: const Text('Delete'),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
-                const SizedBox(height: 15),
-                Text('Student ID: ${showData(profile.studentId)}'),
-                Text('Course: ${showData(profile.course)}'),
-                Text('Year Level: ${profile.yearLevel ?? 'Not provided'}'),
-                Text('Age: ${profile.age ?? 'Not provided'}'),
-                Text('Hobby: ${showData(profile.hobby)}'),
-                Text('Email: ${showData(profile.email)}'),
-                Text('Favorite Subject: ${showData(profile.favoriteSubject)}'),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    ElevatedButton(
-                      onPressed: () {
-                        toggleFavorite(profile);
-                      },
-                      child: Text(isFavorite ? 'Unfavorite' : 'Favorite'),
-                    ),
-                    const SizedBox(width: 8),
-                    ElevatedButton(
-                      onPressed: () {
-                        showEditDialog(profile);
-                      },
-                      child: const Text('Edit'),
-                    ),
-                    const SizedBox(width: 8),
-                    ElevatedButton(
-                      onPressed: () {
-                        deleteStudent(index);
-                      },
-                      child: const Text('Delete'),
-                    ),
-                  ],
-                ),
-              ],
+              ),
             ),
           ),
         );
@@ -515,12 +637,381 @@ class _StudentHomeState extends State<StudentHome> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFFFE6F0),
+
       appBar: AppBar(
         title: const Text('My First Flutter Application'),
+
         backgroundColor: Colors.white,
+
+        foregroundColor: const Color(0xFFAD1457),
+
+        actions: [
+          IconButton(
+            onPressed: openAddStudent,
+
+            icon: const Icon(Icons.person_add),
+
+            tooltip: 'Add Student',
+          ),
+        ],
+      ),
+
+      body: content,
+    );
+  }
+}
+
+// screen for student details
+
+class StudentDetailsScreen extends StatelessWidget {
+  final Profile profile;
+
+  const StudentDetailsScreen({super.key, required this.profile});
+
+  void showEditModal(BuildContext context) {
+    showDialog(
+      context: context,
+
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Edit Student'),
+
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+
+              crossAxisAlignment: CrossAxisAlignment.start,
+
+              children: [
+                Text(
+                  'Name: '
+                  '${showData(profile.name)}',
+                ),
+
+                const SizedBox(height: 8),
+
+                Text(
+                  'Student ID: '
+                  '${showData(profile.studentId)}',
+                ),
+
+                const SizedBox(height: 8),
+
+                Text(
+                  'Course: '
+                  '${showData(profile.course)}',
+                ),
+
+                const SizedBox(height: 8),
+
+                Text(
+                  'Year Level: '
+                  '${profile.yearLevel ?? 'Not provided'}',
+                ),
+
+                const SizedBox(height: 8),
+
+                Text(
+                  'Age: '
+                  '${profile.age ?? 'Not provided'}',
+                ),
+
+                const SizedBox(height: 8),
+
+                Text(
+                  'Hobby: '
+                  '${showData(profile.hobby)}',
+                ),
+
+                const SizedBox(height: 8),
+
+                Text(
+                  'Email: '
+                  '${showData(profile.email)}',
+                ),
+
+                const SizedBox(height: 8),
+
+                Text(
+                  'Favorite Subject: '
+                  '${showData(profile.favoriteSubject)}',
+                ),
+
+                const SizedBox(height: 8),
+
+                Text(
+                  'Status: '
+                  '${profile.active ? 'ACTIVE' : 'INACTIVE'}',
+                ),
+              ],
+            ),
+          ),
+
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+
+              child: const Text('Cancel'),
+            ),
+
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFFFE6F0),
+
+      appBar: AppBar(
+        title: const Text('Student Details'),
+
+        backgroundColor: Colors.white,
+
         foregroundColor: const Color(0xFFAD1457),
       ),
-      body: content,
+
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+
+        child: Card(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),
+
+            side: const BorderSide(color: Color(0xFFAD1457)),
+          ),
+
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+
+              children: [
+                Center(
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(60),
+
+                    child: Image.asset(
+                      profile.image,
+                      width: 120,
+                      height: 120,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 20),
+
+                Center(
+                  child: Text(
+                    showData(profile.name),
+
+                    style: const TextStyle(
+                      fontSize: 26,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'Georgia',
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 25),
+
+                Text(
+                  'Student ID: '
+                  '${showData(profile.studentId)}',
+
+                  style: const TextStyle(fontSize: 17),
+                ),
+
+                const SizedBox(height: 8),
+
+                Text(
+                  'Course: '
+                  '${showData(profile.course)}',
+
+                  style: const TextStyle(fontSize: 17),
+                ),
+
+                const SizedBox(height: 8),
+
+                Text(
+                  'Year Level: '
+                  '${profile.yearLevel ?? 'Not provided'}',
+
+                  style: const TextStyle(fontSize: 17),
+                ),
+
+                const SizedBox(height: 8),
+
+                Text(
+                  'Age: '
+                  '${profile.age ?? 'Not provided'}',
+
+                  style: const TextStyle(fontSize: 17),
+                ),
+
+                const SizedBox(height: 8),
+
+                Text(
+                  'Hobby: '
+                  '${showData(profile.hobby)}',
+
+                  style: const TextStyle(fontSize: 17),
+                ),
+
+                const SizedBox(height: 8),
+
+                Text(
+                  'Email: '
+                  '${showData(profile.email)}',
+
+                  style: const TextStyle(fontSize: 17),
+                ),
+
+                const SizedBox(height: 8),
+
+                Text(
+                  'Favorite Subject: '
+                  '${showData(profile.favoriteSubject)}',
+
+                  style: const TextStyle(fontSize: 17),
+                ),
+
+                const SizedBox(height: 15),
+
+                Row(
+                  children: [
+                    const Text(
+                      'Status: ',
+
+                      style: TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+
+                    Text(
+                      profile.active ? 'ACTIVE' : 'INACTIVE',
+
+                      style: TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.bold,
+                        color: profile.active ? Colors.green : Colors.red,
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 25),
+
+                SizedBox(
+                  width: double.infinity,
+
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      showEditModal(context);
+                    },
+
+                    icon: const Icon(Icons.edit),
+
+                    label: const Text('Edit Student'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class AddStudentScreen extends StatelessWidget {
+  const AddStudentScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFFFE6F0),
+
+      appBar: AppBar(
+        title: const Text('Add Student'),
+
+        backgroundColor: Colors.white,
+
+        foregroundColor: const Color(0xFFAD1457),
+      ),
+
+      body: Center(
+        child: Card(
+          margin: const EdgeInsets.all(20),
+
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),
+
+            side: const BorderSide(color: Color(0xFFAD1457)),
+          ),
+
+          child: Padding(
+            padding: const EdgeInsets.all(30),
+
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+
+              children: [
+                const Icon(
+                  Icons.person_add,
+                  size: 80,
+                  color: Color(0xFFAD1457),
+                ),
+
+                const SizedBox(height: 20),
+
+                const Text(
+                  'Add Student',
+
+                  style: TextStyle(
+                    fontSize: 26,
+                    fontWeight: FontWeight.bold,
+                    fontFamily: 'Georgia',
+                  ),
+                ),
+
+                const SizedBox(height: 10),
+
+                const Text(
+                  'Add Student Screen',
+
+                  style: TextStyle(fontSize: 18),
+                ),
+
+                const SizedBox(height: 20),
+
+                const Text(
+                  'Student information '
+                  'form will be added here.',
+
+                  textAlign: TextAlign.center,
+
+                  style: TextStyle(fontSize: 16, color: Colors.grey),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
