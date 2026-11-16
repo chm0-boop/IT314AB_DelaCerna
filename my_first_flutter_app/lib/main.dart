@@ -1,4 +1,25 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+const String storageKey = 'saved_students';
+
+final List<Profile> profiles = createDefaultProfiles();
+final Set<String> favoriteStudents = {};
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  try {
+    await loadSavedStudents();
+  } catch (_) {
+    profiles
+      ..clear()
+      ..addAll(createDefaultProfiles());
+  }
+
+  runApp(const MyApp());
+}
 
 class Profile {
   String image;
@@ -24,147 +45,40 @@ class Profile {
     this.favoriteSubject,
     this.active = true,
   });
-}
 
-String showData(String? value) {
-  if (value == null || value.isEmpty) {
-    return 'Not provided';
+  Map<String, dynamic> toJson() {
+    return {
+      'image': image,
+      'name': name,
+      'course': course,
+      'yearLevel': yearLevel,
+      'age': age,
+      'hobby': hobby,
+      'studentId': studentId,
+      'email': email,
+      'favoriteSubject': favoriteSubject,
+      'active': active,
+    };
   }
 
-  return value;
-}
-
-List<Profile> profiles = [
-  Profile(
-    image: 'assets/DelaCerna.jpg',
-    name: 'Leachim Dela Cerna',
-    course: 'BSIT',
-    yearLevel: 3,
-    age: 21,
-    hobby: 'Dancing',
-    studentId: '2023-001',
-    email: 'leachim@example.com',
-    favoriteSubject: 'Information Management',
-    active: true,
-  ),
-  Profile(
-    image: 'assets/barbie.jpg',
-    name: 'Julia Kong',
-    course: 'BSIT',
-    yearLevel: 3,
-    age: 21,
-    hobby: 'Watching Movies',
-    studentId: '2023-002',
-    email: 'julia@example.com',
-    favoriteSubject: 'Programming',
-    active: false,
-  ),
-  Profile(
-    image: 'assets/barbie1.jpg',
-    name: 'Mav Tajanlangit',
-    course: 'BSIT',
-    yearLevel: 3,
-    age: 21,
-    hobby: 'Playing Games',
-    studentId: '2023-003',
-    email: 'mav@example.com',
-    favoriteSubject: 'Database',
-    active: true,
-  ),
-  Profile(
-    image: 'assets/barbie3.jpg',
-    name: 'Dom Ocarol',
-    course: 'BSIT',
-    yearLevel: 3,
-    age: 21,
-    hobby: 'Basketball',
-    studentId: '2023-004',
-    email: 'dom@example.com',
-    favoriteSubject: 'Networking',
-    active: false,
-  ),
-  Profile(
-    image: 'assets/barbie4.jpg',
-    name: 'Krylle Racaza',
-    course: 'BSIT',
-    yearLevel: 3,
-    age: 21,
-    hobby: 'Music',
-    studentId: '2023-005',
-    email: 'krylle@example.com',
-    favoriteSubject: 'Web Development',
-    active: true,
-  ),
-  Profile(
-    image: 'assets/emji.jpg',
-    name: 'Emji Syllanto',
-    course: 'BSIT',
-    yearLevel: 3,
-    age: 21,
-    hobby: 'Drawing',
-    studentId: '2023-006',
-    email: 'emji@example.com',
-    favoriteSubject: 'Information Management',
-    active: false,
-  ),
-];
-
-void sortProfilesByName() {
-  profiles.sort((a, b) => (a.name ?? '').compareTo(b.name ?? ''));
-}
-
-void main() {
-  sortProfilesByName();
-
-  runApp(const MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-
-      initialRoute: '/student-list',
-
-      routes: {
-        '/student-list': (context) => const StudentListScreen(),
-
-        '/add-student': (context) => const AddStudentScreen(),
-      },
-
-      onGenerateRoute: (settings) {
-        if (settings.name == '/student-details') {
-          final Profile profile = settings.arguments as Profile;
-
-          return MaterialPageRoute(
-            builder: (context) => StudentDetailsScreen(profile: profile),
-          );
-        }
-
-        return null;
-      },
+  factory Profile.fromJson(Map<String, dynamic> json) {
+    return Profile(
+      image: json['image']?.toString() ?? '',
+      name: json['name']?.toString(),
+      course: json['course']?.toString(),
+      yearLevel: int.tryParse(json['yearLevel']?.toString() ?? ''),
+      age: int.tryParse(json['age']?.toString() ?? ''),
+      hobby: json['hobby']?.toString(),
+      studentId: json['studentId']?.toString(),
+      email: json['email']?.toString(),
+      favoriteSubject: json['favoriteSubject']?.toString(),
+      active: json['active'] == false ? false : true,
     );
   }
 }
 
-// ang screen for student list
-
-class StudentListScreen extends StatefulWidget {
-  const StudentListScreen({super.key});
-
-  @override
-  State<StudentListScreen> createState() => _StudentListScreenState();
-}
-
-class _StudentListScreenState extends State<StudentListScreen> {
-  final Set<String> favoriteStudents = {};
-
-  bool isLoading = true;
-
-  final List<Profile> originalProfiles = [
+List<Profile> createDefaultProfiles() {
+  return [
     Profile(
       image: 'assets/DelaCerna.jpg',
       name: 'Leachim Dela Cerna',
@@ -175,7 +89,6 @@ class _StudentListScreenState extends State<StudentListScreen> {
       studentId: '2023-001',
       email: 'leachim@example.com',
       favoriteSubject: 'Information Management',
-      active: true,
     ),
     Profile(
       image: 'assets/barbie.jpg',
@@ -183,7 +96,7 @@ class _StudentListScreenState extends State<StudentListScreen> {
       course: 'BSIT',
       yearLevel: 3,
       age: 21,
-      hobby: 'Watching Movies',
+      hobby: 'Reading',
       studentId: '2023-002',
       email: 'julia@example.com',
       favoriteSubject: 'Programming',
@@ -195,11 +108,10 @@ class _StudentListScreenState extends State<StudentListScreen> {
       course: 'BSIT',
       yearLevel: 3,
       age: 21,
-      hobby: 'Playing Games',
+      hobby: 'Gaming',
       studentId: '2023-003',
       email: 'mav@example.com',
-      favoriteSubject: 'Database',
-      active: true,
+      favoriteSubject: 'Networking',
     ),
     Profile(
       image: 'assets/barbie3.jpg',
@@ -207,10 +119,10 @@ class _StudentListScreenState extends State<StudentListScreen> {
       course: 'BSIT',
       yearLevel: 3,
       age: 21,
-      hobby: 'Basketball',
+      hobby: 'Sports',
       studentId: '2023-004',
       email: 'dom@example.com',
-      favoriteSubject: 'Networking',
+      favoriteSubject: 'Database',
       active: false,
     ),
     Profile(
@@ -223,7 +135,6 @@ class _StudentListScreenState extends State<StudentListScreen> {
       studentId: '2023-005',
       email: 'krylle@example.com',
       favoriteSubject: 'Web Development',
-      active: true,
     ),
     Profile(
       image: 'assets/emji.jpg',
@@ -238,50 +149,233 @@ class _StudentListScreenState extends State<StudentListScreen> {
       active: false,
     ),
   ];
+}
+
+void sortProfilesByName() {
+  profiles.sort(
+    (a, b) =>
+        (a.name ?? '').toLowerCase().compareTo((b.name ?? '').toLowerCase()),
+  );
+}
+
+Future<void> saveStudentsToStorage() async {
+  final prefs = await SharedPreferences.getInstance();
+  final data = jsonEncode(profiles.map((profile) => profile.toJson()).toList());
+  await prefs.setString(storageKey, data);
+}
+
+Future<void> loadSavedStudents() async {
+  final prefs = await SharedPreferences.getInstance();
+  final savedData = prefs.getString(storageKey);
+
+  final Map<String, Profile> records = {
+    for (final profile in createDefaultProfiles()) profile.studentId!: profile,
+  };
+
+  if (savedData != null && savedData.trim().isNotEmpty) {
+    try {
+      final decoded = jsonDecode(savedData);
+
+      if (decoded is List) {
+        for (final item in decoded) {
+          if (item is! Map) continue;
+
+          try {
+            final profile = Profile.fromJson(Map<String, dynamic>.from(item));
+
+            final id = profile.studentId?.trim();
+
+            if (id == null || id.isEmpty) continue;
+
+            // Restore the default picture if an older saved record has none.
+            final defaultProfile = records[id];
+            if (profile.image.trim().isEmpty && defaultProfile != null) {
+              profile.image = defaultProfile.image;
+            }
+
+            records[id] = profile;
+          } catch (_) {
+            // Skip invalid saved records.
+          }
+        }
+      }
+    } catch (_) {
+      // Use default profiles if saved data is invalid.
+    }
+  }
+
+  profiles
+    ..clear()
+    ..addAll(records.values);
+
+  sortProfilesByName();
+  await saveStudentsToStorage();
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
 
   @override
-  void initState() {
-    super.initState();
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      title: 'Student Enrollment System',
+      theme: ThemeData(
+        scaffoldBackgroundColor: const Color(0xFFFFF8E7),
+        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFFE91E63)),
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Colors.white,
+          foregroundColor: Color(0xFFAD1457),
+          elevation: 1,
+        ),
+      ),
+      home: const StudentListScreen(),
+      onGenerateRoute: (settings) {
+        if (settings.name == '/add-student') {
+          return MaterialPageRoute<Profile>(
+            builder: (_) => const AddStudentScreen(),
+          );
+        }
 
-    loadStudents();
-  }
+        if (settings.name == '/student-details') {
+          final profile = settings.arguments as Profile;
+          return MaterialPageRoute(
+            builder: (_) => StudentDetailsScreen(profile: profile),
+          );
+        }
 
-  Future<void> loadStudents() async {
-    await Future.delayed(const Duration(seconds: 2));
-
-    if (!mounted) {
-      return;
-    }
-
-    setState(() {
-      isLoading = false;
-    });
-  }
-
-  void showEditDialog(Profile profile) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Edit Student'),
-          content: Text('Editing ${showData(profile.name)}'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: const Text('Close'),
-            ),
-          ],
-        );
+        return MaterialPageRoute(builder: (_) => const StudentListScreen());
       },
     );
   }
+}
+
+// Reusable student picture.
+// If the asset is missing or cannot load, show the student's initials.
+Widget studentPicture(Profile profile, {double radius = 28}) {
+  final name = profile.name ?? '';
+  final initials = name.isNotEmpty ? name[0].toUpperCase() : '?';
+
+  return CircleAvatar(
+    radius: radius,
+    backgroundColor: const Color(0xFFFFE6F0),
+    backgroundImage: profile.image.trim().isNotEmpty
+        ? AssetImage(profile.image)
+        : null,
+    onBackgroundImageError: profile.image.trim().isNotEmpty
+        ? (exception, stackTrace) {}
+        : null,
+    child: profile.image.trim().isEmpty
+        ? Text(
+            initials,
+            style: TextStyle(
+              color: const Color(0xFFAD1457),
+              fontSize: radius * 0.75,
+              fontWeight: FontWeight.bold,
+            ),
+          )
+        : null,
+  );
+}
+
+class StudentListScreen extends StatefulWidget {
+  const StudentListScreen({super.key});
+
+  @override
+  State<StudentListScreen> createState() => _StudentListScreenState();
+}
+
+class _StudentListScreenState extends State<StudentListScreen> {
+  bool isOpeningAddStudent = false;
+
+  Future<void> openAddStudent() async {
+    if (isOpeningAddStudent) return;
+
+    setState(() => isOpeningAddStudent = true);
+
+    try {
+      final newStudent = await Navigator.of(
+        context,
+      ).pushNamed<Profile>('/add-student');
+
+      if (!mounted || newStudent == null) return;
+
+      final duplicate = profiles.any(
+        (profile) =>
+            (profile.studentId ?? '').toLowerCase() ==
+            (newStudent.studentId ?? '').toLowerCase(),
+      );
+
+      if (duplicate) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('This Student ID already exists.')),
+        );
+        return;
+      }
+
+      setState(() {
+        profiles.add(newStudent);
+        sortProfilesByName();
+      });
+
+      try {
+        await saveStudentsToStorage();
+
+        if (!mounted) return;
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Student successfully enrolled!')),
+        );
+      } catch (e) {
+        if (!mounted) return;
+
+        setState(() => profiles.remove(newStudent));
+
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Unable to save student: $e')));
+      }
+    } finally {
+      if (mounted) {
+        setState(() => isOpeningAddStudent = false);
+      }
+    }
+  }
+
+  Future<void> openDetails(Profile profile) async {
+    await Navigator.of(
+      context,
+    ).pushNamed('/student-details', arguments: profile);
+
+    if (mounted) {
+      setState(sortProfilesByName);
+    }
+  }
+
+  Future<void> editStudent(Profile profile) async {
+    final result = await showEditStudentDialog(context, profile);
+
+    if (result == true) {
+      setState(sortProfilesByName);
+      await saveStudentsToStorage();
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Student information updated!')),
+      );
+    }
+  }
+
+  Future<void> changeStatus(Profile profile) async {
+    setState(() => profile.active = !profile.active);
+    await saveStudentsToStorage();
+  }
 
   void toggleFavorite(Profile profile) {
-    final String id = profile.studentId ?? profile.name ?? '';
-
     setState(() {
+      final id = profile.studentId ?? '';
+
       if (favoriteStudents.contains(id)) {
         favoriteStudents.remove(id);
       } else {
@@ -290,728 +384,574 @@ class _StudentListScreenState extends State<StudentListScreen> {
     });
   }
 
-  void deleteStudent(int index) {
-    final String id = profiles[index].studentId ?? profiles[index].name ?? '';
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text(
+          'Student Enrollment',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        actions: [
+          IconButton(
+            tooltip: 'Add Student',
+            onPressed: isOpeningAddStudent ? null : openAddStudent,
+            icon: const Icon(Icons.person_add, size: 27),
+          ),
+        ],
+      ),
+      body: profiles.isEmpty
+          ? const Center(child: Text('No students found.'))
+          : ListView.builder(
+              padding: const EdgeInsets.all(12),
+              itemCount: profiles.length,
+              itemBuilder: (context, index) {
+                final profile = profiles[index];
+                final isFavorite = favoriteStudents.contains(
+                  profile.studentId ?? '',
+                );
 
-    setState(() {
-      profiles.removeAt(index);
-      favoriteStudents.remove(id);
-    });
+                return Card(
+                  color: Colors.white,
+                  elevation: 3,
+                  margin: const EdgeInsets.symmetric(vertical: 7),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(15),
+                    side: const BorderSide(color: Color(0xFFFFC1D9)),
+                  ),
+                  child: ListTile(
+                    contentPadding: const EdgeInsets.all(12),
+                    leading: studentPicture(profile),
+                    title: Text(
+                      profile.name ?? 'No Name',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFFAD1457),
+                      ),
+                    ),
+                    subtitle: Text(
+                      '${profile.studentId ?? ''}\n'
+                      '${profile.course ?? ''} - Year ${profile.yearLevel ?? ''}\n'
+                      '${profile.active ? 'Active' : 'Inactive'}',
+                    ),
+                    isThreeLine: true,
+                    onTap: () => openDetails(profile),
+                    trailing: PopupMenuButton<String>(
+                      onSelected: (value) async {
+                        if (value == 'edit') {
+                          await editStudent(profile);
+                        } else if (value == 'favorite') {
+                          toggleFavorite(profile);
+                        } else if (value == 'status') {
+                          await changeStatus(profile);
+                        }
+                      },
+                      itemBuilder: (context) => [
+                        const PopupMenuItem(value: 'edit', child: Text('Edit')),
+                        PopupMenuItem(
+                          value: 'favorite',
+                          child: Text(
+                            isFavorite ? 'Remove Favorite' : 'Add to Favorites',
+                          ),
+                        ),
+                        PopupMenuItem(
+                          value: 'status',
+                          child: Text(
+                            profile.active ? 'Deactivate' : 'Activate',
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+      floatingActionButton: FloatingActionButton(
+        tooltip: 'Add Student',
+        backgroundColor: const Color(0xFFE91E63),
+        foregroundColor: Colors.white,
+        onPressed: isOpeningAddStudent ? null : openAddStudent,
+        child: const Icon(Icons.person_add),
+      ),
+    );
+  }
+}
 
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Student deleted')));
+class AddStudentScreen extends StatefulWidget {
+  const AddStudentScreen({super.key});
+
+  @override
+  State<AddStudentScreen> createState() => _AddStudentScreenState();
+}
+
+class _AddStudentScreenState extends State<AddStudentScreen> {
+  final formKey = GlobalKey<FormState>();
+
+  final nameController = TextEditingController();
+  final idController = TextEditingController();
+  final courseController = TextEditingController(text: 'BSIT');
+  final yearController = TextEditingController();
+  final ageController = TextEditingController();
+  final emailController = TextEditingController();
+  final hobbyController = TextEditingController();
+  final subjectController = TextEditingController();
+
+  bool active = true;
+
+  @override
+  void dispose() {
+    nameController.dispose();
+    idController.dispose();
+    courseController.dispose();
+    yearController.dispose();
+    ageController.dispose();
+    emailController.dispose();
+    hobbyController.dispose();
+    subjectController.dispose();
+    super.dispose();
   }
 
-  Future<void> restoreStudents() async {
-    setState(() {
-      isLoading = true;
-    });
+  String? requiredValidator(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'This field is required';
+    }
+    return null;
+  }
 
-    await Future.delayed(const Duration(seconds: 2));
+  String? emailValidator(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Email is required';
+    }
 
-    if (!mounted) {
+    final pattern = RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
+
+    if (!pattern.hasMatch(value.trim())) {
+      return 'Enter a valid email address';
+    }
+
+    return null;
+  }
+
+  String? yearValidator(String? value) {
+    final year = int.tryParse(value ?? '');
+
+    if (year == null || year < 1 || year > 4) {
+      return 'Enter a year level from 1 to 4';
+    }
+    return null;
+  }
+
+  String? ageValidator(String? value) {
+    final age = int.tryParse(value ?? '');
+
+    if (age == null || age < 1 || age > 120) {
+      return 'Enter a valid age';
+    }
+    return null;
+  }
+
+  void saveStudent() {
+    if (!formKey.currentState!.validate()) return;
+
+    final id = idController.text.trim();
+
+    final duplicate = profiles.any(
+      (profile) => (profile.studentId ?? '').toLowerCase() == id.toLowerCase(),
+    );
+
+    if (duplicate) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('This Student ID already exists.')),
+      );
       return;
     }
 
-    setState(() {
-      profiles = originalProfiles
-          .map(
-            (student) => Profile(
-              image: student.image,
-              name: student.name,
-              course: student.course,
-              yearLevel: student.yearLevel,
-              age: student.age,
-              hobby: student.hobby,
-              studentId: student.studentId,
-              email: student.email,
-              favoriteSubject: student.favoriteSubject,
-              active: student.active,
-            ),
-          )
-          .toList();
+    final student = Profile(
+      image: '',
+      name: nameController.text.trim(),
+      studentId: id,
+      course: courseController.text.trim(),
+      yearLevel: int.parse(yearController.text.trim()),
+      age: int.parse(ageController.text.trim()),
+      email: emailController.text.trim(),
+      hobby: hobbyController.text.trim(),
+      favoriteSubject: subjectController.text.trim(),
+      active: active,
+    );
 
-      favoriteStudents.clear();
-
-      sortProfilesByName();
-
-      isLoading = false;
-    });
+    Navigator.of(context).pop<Profile>(student);
   }
 
-  void openStudentDetails(Profile profile) {
-    Navigator.pushNamed(context, '/student-details', arguments: profile);
-  }
-
-  void openAddStudent() {
-    Navigator.pushNamed(context, '/add-student');
-  }
-
-  Widget loadingState() {
-    return const Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          CircularProgressIndicator(),
-
-          SizedBox(height: 20),
-
-          Text(
-            'Loading students...',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+  Widget buildField({
+    required String label,
+    required TextEditingController controller,
+    TextInputType keyboardType = TextInputType.text,
+    String? Function(String?)? validator,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: TextFormField(
+        controller: controller,
+        keyboardType: keyboardType,
+        validator: validator ?? requiredValidator,
+        decoration: InputDecoration(
+          labelText: label,
+          filled: true,
+          fillColor: Colors.white,
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Color(0xFFE91E63), width: 2),
           ),
-        ],
+        ),
       ),
     );
   }
 
-  Widget emptyState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(Icons.people_outline, size: 80, color: Colors.grey),
-
-          const SizedBox(height: 15),
-
-          const Text(
-            'No students found',
-            style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-          ),
-
-          const SizedBox(height: 5),
-
-          const Text(
-            'The student directory is empty.',
-            style: TextStyle(fontSize: 16, color: Colors.grey),
-          ),
-
-          const SizedBox(height: 20),
-
-          ElevatedButton(
-            onPressed: restoreStudents,
-            child: const Text('Restore Students'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget studentList() {
-    return ListView.builder(
-      padding: const EdgeInsets.all(12),
-
-      itemCount: profiles.length,
-
-      itemBuilder: (context, index) {
-        final Profile profile = profiles[index];
-
-        final String studentKey = profile.studentId ?? profile.name ?? '';
-
-        final bool isFavorite = favoriteStudents.contains(studentKey);
-
-        return Card(
-          margin: const EdgeInsets.only(bottom: 15),
-
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(15),
-            side: const BorderSide(color: Color(0xFFAD1457)),
-          ),
-
-          child: InkWell(
-            borderRadius: BorderRadius.circular(15),
-
-            onTap: () {
-              openStudentDetails(profile);
-            },
-
-            child: Padding(
-              padding: const EdgeInsets.all(15),
-
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-
-                children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-
-                    children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(50),
-
-                        child: Image.asset(
-                          profile.image,
-                          width: 80,
-                          height: 80,
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-
-                      const SizedBox(width: 15),
-
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-
-                          children: [
-                            Text(
-                              showData(profile.name),
-
-                              style: const TextStyle(
-                                fontSize: 22,
-                                fontWeight: FontWeight.bold,
-                                fontFamily: 'Georgia',
-                              ),
-                            ),
-
-                            const SizedBox(height: 8),
-
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 5,
-                              ),
-
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(20),
-
-                                color: profile.active
-                                    ? Colors.green.shade100
-                                    : Colors.red.shade100,
-                              ),
-
-                              child: Text(
-                                profile.active ? 'ACTIVE' : 'INACTIVE',
-
-                                style: TextStyle(
-                                  color: profile.active
-                                      ? Colors.green.shade700
-                                      : Colors.red.shade700,
-
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-
-                            if (isFavorite) ...[
-                              const SizedBox(height: 5),
-
-                              const Text(
-                                '★ FAVORITE STUDENT',
-                                style: TextStyle(
-                                  color: Colors.pink,
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ],
-                        ),
-                      ),
-                    ],
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Add Student')),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Form(
+          key: formKey,
+          child: Column(
+            children: [
+              const Icon(
+                Icons.person_add_alt_1,
+                size: 65,
+                color: Color(0xFFE91E63),
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                'New Student Information',
+                style: TextStyle(
+                  fontSize: 21,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFFAD1457),
+                ),
+              ),
+              const SizedBox(height: 22),
+              buildField(label: 'Full Name', controller: nameController),
+              buildField(label: 'Student ID', controller: idController),
+              buildField(label: 'Course', controller: courseController),
+              buildField(
+                label: 'Year Level (1-4)',
+                controller: yearController,
+                keyboardType: TextInputType.number,
+                validator: yearValidator,
+              ),
+              buildField(
+                label: 'Age',
+                controller: ageController,
+                keyboardType: TextInputType.number,
+                validator: ageValidator,
+              ),
+              buildField(
+                label: 'Email',
+                controller: emailController,
+                keyboardType: TextInputType.emailAddress,
+                validator: emailValidator,
+              ),
+              buildField(label: 'Hobby', controller: hobbyController),
+              buildField(
+                label: 'Favorite Subject',
+                controller: subjectController,
+              ),
+              SwitchListTile(
+                title: const Text('Active Student'),
+                value: active,
+                activeColor: const Color(0xFFE91E63),
+                onChanged: (value) {
+                  setState(() => active = value);
+                },
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: ElevatedButton.icon(
+                  onPressed: saveStudent,
+                  icon: const Icon(Icons.save),
+                  label: const Text('Save Student'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFE91E63),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
 
-                  if (!profile.active) ...[
-                    const SizedBox(height: 8),
+class StudentDetailsScreen extends StatefulWidget {
+  final Profile profile;
 
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
-                      ),
+  const StudentDetailsScreen({super.key, required this.profile});
 
-                      decoration: BoxDecoration(
-                        color: Colors.orange.shade100,
+  @override
+  State<StudentDetailsScreen> createState() => _StudentDetailsScreenState();
+}
 
-                        borderRadius: BorderRadius.circular(8),
-                      ),
+class _StudentDetailsScreenState extends State<StudentDetailsScreen> {
+  Future<void> editStudent() async {
+    final result = await showEditStudentDialog(context, widget.profile);
 
-                      child: const Text(
-                        'This student is inactive',
+    if (result == true) {
+      sortProfilesByName();
+      await saveStudentsToStorage();
 
-                        style: TextStyle(
-                          color: Colors.deepOrange,
-                          fontWeight: FontWeight.bold,
-                        ),
+      if (!mounted) return;
+
+      setState(() {});
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Student information updated!')),
+      );
+    }
+  }
+
+  Widget detailRow(String label, String? value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 9),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            flex: 2,
+            child: Text(
+              label,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Color(0xFFAD1457),
+              ),
+            ),
+          ),
+          Expanded(
+            flex: 3,
+            child: Text(
+              value == null || value.isEmpty ? 'Not provided' : value,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final profile = widget.profile;
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Student Details'),
+        actions: [
+          IconButton(
+            tooltip: 'Edit Student',
+            onPressed: editStudent,
+            icon: const Icon(Icons.edit),
+          ),
+        ],
+      ),
+      body: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
+          child: Card(
+            color: Colors.white,
+            elevation: 3,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(18),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  studentPicture(profile, radius: 55),
+                  const SizedBox(height: 15),
+                  Text(
+                    profile.name ?? 'No Name',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 23,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFFAD1457),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  detailRow('Student ID', profile.studentId),
+                  detailRow('Course', profile.course),
+                  detailRow('Year Level', profile.yearLevel?.toString()),
+                  detailRow('Age', profile.age?.toString()),
+                  detailRow('Email', profile.email),
+                  detailRow('Hobby', profile.hobby),
+                  detailRow('Favorite Subject', profile.favoriteSubject),
+                  detailRow('Status', profile.active ? 'Active' : 'Inactive'),
+                  const SizedBox(height: 15),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: editStudent,
+                      icon: const Icon(Icons.edit),
+                      label: const Text('Edit Student'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFE91E63),
+                        foregroundColor: Colors.white,
                       ),
                     ),
-                  ],
-
-                  const SizedBox(height: 15),
-
-                  Text(
-                    'Student ID: '
-                    '${showData(profile.studentId)}',
-                  ),
-
-                  Text(
-                    'Course: '
-                    '${showData(profile.course)}',
-                  ),
-
-                  Text(
-                    'Year Level: '
-                    '${profile.yearLevel ?? 'Not provided'}',
-                  ),
-
-                  Text(
-                    'Age: '
-                    '${profile.age ?? 'Not provided'}',
-                  ),
-
-                  Text(
-                    'Hobby: '
-                    '${showData(profile.hobby)}',
-                  ),
-
-                  Text(
-                    'Email: '
-                    '${showData(profile.email)}',
-                  ),
-
-                  Text(
-                    'Favorite Subject: '
-                    '${showData(profile.favoriteSubject)}',
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  Row(
-                    children: [
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: () {
-                            toggleFavorite(profile);
-                          },
-
-                          child: Text(isFavorite ? 'Unfavorite' : 'Favorite'),
-                        ),
-                      ),
-
-                      const SizedBox(width: 8),
-
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: () {
-                            showEditDialog(profile);
-                          },
-
-                          child: const Text('Edit'),
-                        ),
-                      ),
-
-                      const SizedBox(width: 8),
-
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: () {
-                            deleteStudent(index);
-                          },
-
-                          child: const Text('Delete'),
-                        ),
-                      ),
-                    ],
                   ),
                 ],
               ),
             ),
           ),
-        );
-      },
+        ),
+      ),
     );
   }
+}
 
-  @override
-  Widget build(BuildContext context) {
-    Widget content;
+Future<bool?> showEditStudentDialog(BuildContext context, Profile profile) {
+  final nameController = TextEditingController(text: profile.name);
+  final courseController = TextEditingController(text: profile.course);
+  final yearController = TextEditingController(
+    text: profile.yearLevel?.toString() ?? '',
+  );
+  final ageController = TextEditingController(
+    text: profile.age?.toString() ?? '',
+  );
+  final emailController = TextEditingController(text: profile.email);
+  final hobbyController = TextEditingController(text: profile.hobby);
+  final subjectController = TextEditingController(
+    text: profile.favoriteSubject,
+  );
 
-    if (isLoading) {
-      content = loadingState();
-    } else if (profiles.isEmpty) {
-      content = emptyState();
-    } else {
-      content = studentList();
-    }
+  final formKey = GlobalKey<FormState>();
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFFFE6F0),
+  return showDialog<bool>(
+    context: context,
+    builder: (dialogContext) {
+      return AlertDialog(
+        title: const Text('Edit Student'),
+        content: SingleChildScrollView(
+          child: Form(
+            key: formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                editField('Full Name', nameController),
+                editField('Course', courseController),
+                editField(
+                  'Year Level',
+                  yearController,
+                  keyboardType: TextInputType.number,
+                  validator: (value) {
+                    final year = int.tryParse(value ?? '');
 
-      appBar: AppBar(
-        title: const Text('My First Flutter Application'),
+                    if (year == null || year < 1 || year > 4) {
+                      return 'Enter a year from 1 to 4';
+                    }
+                    return null;
+                  },
+                ),
+                editField(
+                  'Age',
+                  ageController,
+                  keyboardType: TextInputType.number,
+                  validator: (value) {
+                    final age = int.tryParse(value ?? '');
 
-        backgroundColor: Colors.white,
-
-        foregroundColor: const Color(0xFFAD1457),
-
+                    if (age == null || age < 1 || age > 120) {
+                      return 'Enter a valid age';
+                    }
+                    return null;
+                  },
+                ),
+                editField(
+                  'Email',
+                  emailController,
+                  keyboardType: TextInputType.emailAddress,
+                  validator: (value) {
+                    if (value == null ||
+                        !RegExp(
+                          r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
+                        ).hasMatch(value.trim())) {
+                      return 'Enter a valid email';
+                    }
+                    return null;
+                  },
+                ),
+                editField('Hobby', hobbyController),
+                editField('Favorite Subject', subjectController),
+              ],
+            ),
+          ),
+        ),
         actions: [
-          IconButton(
-            onPressed: openAddStudent,
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              if (!formKey.currentState!.validate()) return;
 
-            icon: const Icon(Icons.person_add),
+              profile.name = nameController.text.trim();
+              profile.course = courseController.text.trim();
+              profile.yearLevel = int.parse(yearController.text.trim());
+              profile.age = int.parse(ageController.text.trim());
+              profile.email = emailController.text.trim();
+              profile.hobby = hobbyController.text.trim();
+              profile.favoriteSubject = subjectController.text.trim();
 
-            tooltip: 'Add Student',
+              Navigator.pop(dialogContext, true);
+            },
+            child: const Text('Save Changes'),
           ),
         ],
-      ),
-
-      body: content,
-    );
-  }
+      );
+    },
+  ).whenComplete(() {
+    nameController.dispose();
+    courseController.dispose();
+    yearController.dispose();
+    ageController.dispose();
+    emailController.dispose();
+    hobbyController.dispose();
+    subjectController.dispose();
+  });
 }
 
-// screen for student details
-
-class StudentDetailsScreen extends StatelessWidget {
-  final Profile profile;
-
-  const StudentDetailsScreen({super.key, required this.profile});
-
-  void showEditModal(BuildContext context) {
-    showDialog(
-      context: context,
-
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Edit Student'),
-
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-
-              crossAxisAlignment: CrossAxisAlignment.start,
-
-              children: [
-                Text(
-                  'Name: '
-                  '${showData(profile.name)}',
-                ),
-
-                const SizedBox(height: 8),
-
-                Text(
-                  'Student ID: '
-                  '${showData(profile.studentId)}',
-                ),
-
-                const SizedBox(height: 8),
-
-                Text(
-                  'Course: '
-                  '${showData(profile.course)}',
-                ),
-
-                const SizedBox(height: 8),
-
-                Text(
-                  'Year Level: '
-                  '${profile.yearLevel ?? 'Not provided'}',
-                ),
-
-                const SizedBox(height: 8),
-
-                Text(
-                  'Age: '
-                  '${profile.age ?? 'Not provided'}',
-                ),
-
-                const SizedBox(height: 8),
-
-                Text(
-                  'Hobby: '
-                  '${showData(profile.hobby)}',
-                ),
-
-                const SizedBox(height: 8),
-
-                Text(
-                  'Email: '
-                  '${showData(profile.email)}',
-                ),
-
-                const SizedBox(height: 8),
-
-                Text(
-                  'Favorite Subject: '
-                  '${showData(profile.favoriteSubject)}',
-                ),
-
-                const SizedBox(height: 8),
-
-                Text(
-                  'Status: '
-                  '${profile.active ? 'ACTIVE' : 'INACTIVE'}',
-                ),
-              ],
-            ),
-          ),
-
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-
-              child: const Text('Cancel'),
-            ),
-
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-
-              child: const Text('Save'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFFFE6F0),
-
-      appBar: AppBar(
-        title: const Text('Student Details'),
-
-        backgroundColor: Colors.white,
-
-        foregroundColor: const Color(0xFFAD1457),
+Widget editField(
+  String label,
+  TextEditingController controller, {
+  TextInputType keyboardType = TextInputType.text,
+  String? Function(String?)? validator,
+}) {
+  return Padding(
+    padding: const EdgeInsets.only(bottom: 12),
+    child: TextFormField(
+      controller: controller,
+      keyboardType: keyboardType,
+      validator:
+          validator ??
+          (value) {
+            if (value == null || value.trim().isEmpty) {
+              return 'This field is required';
+            }
+            return null;
+          },
+      decoration: InputDecoration(
+        labelText: label,
+        border: const OutlineInputBorder(),
       ),
-
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-
-        child: Card(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(15),
-
-            side: const BorderSide(color: Color(0xFFAD1457)),
-          ),
-
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-
-              children: [
-                Center(
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(60),
-
-                    child: Image.asset(
-                      profile.image,
-                      width: 120,
-                      height: 120,
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 20),
-
-                Center(
-                  child: Text(
-                    showData(profile.name),
-
-                    style: const TextStyle(
-                      fontSize: 26,
-                      fontWeight: FontWeight.bold,
-                      fontFamily: 'Georgia',
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 25),
-
-                Text(
-                  'Student ID: '
-                  '${showData(profile.studentId)}',
-
-                  style: const TextStyle(fontSize: 17),
-                ),
-
-                const SizedBox(height: 8),
-
-                Text(
-                  'Course: '
-                  '${showData(profile.course)}',
-
-                  style: const TextStyle(fontSize: 17),
-                ),
-
-                const SizedBox(height: 8),
-
-                Text(
-                  'Year Level: '
-                  '${profile.yearLevel ?? 'Not provided'}',
-
-                  style: const TextStyle(fontSize: 17),
-                ),
-
-                const SizedBox(height: 8),
-
-                Text(
-                  'Age: '
-                  '${profile.age ?? 'Not provided'}',
-
-                  style: const TextStyle(fontSize: 17),
-                ),
-
-                const SizedBox(height: 8),
-
-                Text(
-                  'Hobby: '
-                  '${showData(profile.hobby)}',
-
-                  style: const TextStyle(fontSize: 17),
-                ),
-
-                const SizedBox(height: 8),
-
-                Text(
-                  'Email: '
-                  '${showData(profile.email)}',
-
-                  style: const TextStyle(fontSize: 17),
-                ),
-
-                const SizedBox(height: 8),
-
-                Text(
-                  'Favorite Subject: '
-                  '${showData(profile.favoriteSubject)}',
-
-                  style: const TextStyle(fontSize: 17),
-                ),
-
-                const SizedBox(height: 15),
-
-                Row(
-                  children: [
-                    const Text(
-                      'Status: ',
-
-                      style: TextStyle(
-                        fontSize: 17,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-
-                    Text(
-                      profile.active ? 'ACTIVE' : 'INACTIVE',
-
-                      style: TextStyle(
-                        fontSize: 17,
-                        fontWeight: FontWeight.bold,
-                        color: profile.active ? Colors.green : Colors.red,
-                      ),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 25),
-
-                SizedBox(
-                  width: double.infinity,
-
-                  child: ElevatedButton.icon(
-                    onPressed: () {
-                      showEditModal(context);
-                    },
-
-                    icon: const Icon(Icons.edit),
-
-                    label: const Text('Edit Student'),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class AddStudentScreen extends StatelessWidget {
-  const AddStudentScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFFFE6F0),
-
-      appBar: AppBar(
-        title: const Text('Add Student'),
-
-        backgroundColor: Colors.white,
-
-        foregroundColor: const Color(0xFFAD1457),
-      ),
-
-      body: Center(
-        child: Card(
-          margin: const EdgeInsets.all(20),
-
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(15),
-
-            side: const BorderSide(color: Color(0xFFAD1457)),
-          ),
-
-          child: Padding(
-            padding: const EdgeInsets.all(30),
-
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-
-              children: [
-                const Icon(
-                  Icons.person_add,
-                  size: 80,
-                  color: Color(0xFFAD1457),
-                ),
-
-                const SizedBox(height: 20),
-
-                const Text(
-                  'Add Student',
-
-                  style: TextStyle(
-                    fontSize: 26,
-                    fontWeight: FontWeight.bold,
-                    fontFamily: 'Georgia',
-                  ),
-                ),
-
-                const SizedBox(height: 10),
-
-                const Text(
-                  'Add Student Screen',
-
-                  style: TextStyle(fontSize: 18),
-                ),
-
-                const SizedBox(height: 20),
-
-                const Text(
-                  'Student information '
-                  'form will be added here.',
-
-                  textAlign: TextAlign.center,
-
-                  style: TextStyle(fontSize: 16, color: Colors.grey),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
+    ),
+  );
 }
